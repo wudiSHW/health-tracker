@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生成应用图标</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 10px;
+            border-radius: 10px;
+        }
+        .icon-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover { background: #45a049; }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 生成应用图标</h1>
+        
+        <div class="info">
+            <p>点击下方按钮生成所有尺寸的图标文件。</p>
+            <p>生成的图标将自动下载到您的设备。</p>
+        </div>
+        
+        <button onclick="generateAllIcons()">生成所有图标</button>
+        
+        <div class="icon-grid" id="iconPreview"></div>
+    </div>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            
+            // 绘制渐变背景
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            // 圆角矩形背景
+            ctx.fillStyle = gradient;
+            roundRect(ctx, 0, 0, size, size, size * 0.15);
+            ctx.fill();
+            
+            // 绘制心形
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const heartSize = size * 0.35;
+            
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            drawHeart(ctx, centerX, centerY - size * 0.05, heartSize);
+            ctx.fill();
+            
+            // 绘制十字（医疗符号）
+            ctx.fillStyle = '#667eea';
+            const crossSize = size * 0.12;
+            const crossThickness = size * 0.04;
+            
+            // 垂直条
+            roundRect(ctx, centerX - crossThickness/2, centerY + size * 0.1, crossThickness, crossSize, crossThickness/2);
+            ctx.fill();
+            
+            // 水平条
+            roundRect(ctx, centerX - crossSize/2, centerY + size * 0.1 + crossSize/2 - crossThickness/2, crossSize, crossThickness, crossThickness/2);
+            ctx.fill();
+        }
+        
+        function drawHeart(ctx, x, y, size) {
+            ctx.beginPath();
+            ctx.moveTo(x, y + size * 0.3);
+            ctx.bezierCurveTo(x, y, x - size * 0.5, y, x - size * 0.5, y + size * 0.3);
+            ctx.bezierCurveTo(x - size * 0.5, y + size * 0.7, x, y + size, x, y + size);
+            ctx.bezierCurveTo(x, y + size, x + size * 0.5, y + size * 0.7, x + size * 0.5, y + size * 0.3);
+            ctx.bezierCurveTo(x + size * 0.5, y, x, y, x, y + size * 0.3);
+            ctx.closePath();
+        }
+        
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+        
+        function generateAllIcons() {
+            const previewDiv = document.getElementById('iconPreview');
+            previewDiv.innerHTML = '';
+            
+            sizes.forEach(size => {
+                // 创建canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                
+                // 绘制图标
+                drawIcon(canvas, size);
+                
+                // 显示预览
+                const previewCanvas = document.createElement('canvas');
+                previewCanvas.width = 100;
+                previewCanvas.height = 100;
+                previewCanvas.style.width = '100px';
+                previewCanvas.style.height = '100px';
+                const previewCtx = previewCanvas.getContext('2d');
+                previewCtx.drawImage(canvas, 0, 0, 100, 100);
+                
+                const wrapper = document.createElement('div');
+                wrapper.style.textAlign = 'center';
+                wrapper.innerHTML = `<div>${size}x${size}</div>`;
+                wrapper.appendChild(previewCanvas);
+                previewDiv.appendChild(wrapper);
+                
+                // 下载图标
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `icon-${size}x${size}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+            });
+            
+            alert('图标已生成并下载！请将下载的图标文件放到项目目录中。');
+        }
+        
+        // 页面加载时显示预览
+        window.onload = function() {
+            const previewDiv = document.getElementById('iconPreview');
+            [72, 192].forEach(size => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 100;
+                canvas.height = 100;
+                canvas.style.width = '100px';
+                canvas.style.height = '100px';
+                drawIcon(canvas, 100);
+                
+                const wrapper = document.createElement('div');
+                wrapper.style.textAlign = 'center';
+                wrapper.innerHTML = `<div>预览 ${size}x${size}</div>`;
+                wrapper.appendChild(canvas);
+                previewDiv.appendChild(wrapper);
+            });
+        };
+    </script>
+</body>
+</html>

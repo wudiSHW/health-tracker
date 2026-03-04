@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>健康记录助手</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header .date {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .blood-pressure .icon { background: #ffebee; }
+        .medication .icon { background: #e3f2fd; }
+        .exercise .icon { background: #e8f5e9; }
+
+        .time-section {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .time-label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .input-group input, .input-group select {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .record-list {
+            margin-top: 15px;
+        }
+
+        .record-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .record-info {
+            flex: 1;
+        }
+
+        .record-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .record-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper label {
+            font-size: 16px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .reminder-section {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .reminder-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .reminder-time {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff9800;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 20px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 24px;
+        }
+
+        .nav-item .nav-label {
+            font-size: 12px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .export-btn {
+            background: #2196F3;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .install-btn {
+            background: #4CAF50;
+            color: white;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 健康记录助手</h1>
+        <div class="date" id="currentDate"></div>
+    </div>
+
+    <div class="container">
+        <!-- 记录页面 -->
+        <div id="recordTab" class="tab-content active">
+            <!-- 血压记录 -->
+            <div class="card blood-pressure">
+                <div class="card-title">
+                    <div class="icon">🩺</div>
+                    血压记录
+                </div>
+                
+                <div class="time-section">
+                    <div class="time-label">🌅 早晨 (6:00-9:00)</div>
+                    <div class="input-group">
+                        <input type="number" id="bpMorningHigh" placeholder="收缩压 (高压)" min="50" max="250">
+                        <input type="number" id="bpMorningLow" placeholder="舒张压 (低压)" min="30" max="150">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveBloodPressure('morning')">记录早晨血压</button>
+                </div>
+
+                <div class="time-section">
+                    <div class="time-label">☀️ 中午 (11:00-14:00)</div>
+                    <div class="input-group">
+                        <input type="number" id="bpNoonHigh" placeholder="收缩压 (高压)" min="50" max="250">
+                        <input type="number" id="bpNoonLow" placeholder="舒张压 (低压)" min="30" max="150">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveBloodPressure('noon')">记录中午血压</button>
+                </div>
+
+                <div class="time-section">
+                    <div class="time-label">🌙 晚上 (18:00-21:00)</div>
+                    <div class="input-group">
+                        <input type="number" id="bpEveningHigh" placeholder="收缩压 (高压)" min="50" max="250">
+                        <input type="number" id="bpEveningLow" placeholder="舒张压 (低压)" min="30" max="150">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveBloodPressure('evening')">记录晚上血压</button>
+                </div>
+
+                <div class="record-list" id="bpRecords"></div>
+            </div>
+
+            <!-- 吃药记录 -->
+            <div class="card medication">
+                <div class="card-title">
+                    <div class="icon">💊</div>
+                    吃药记录
+                </div>
+                
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="medMorning" onchange="saveMedication('morning')">
+                    <label for="medMorning">🌅 早晨服药</label>
+                </div>
+                
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="medNoon" onchange="saveMedication('noon')">
+                    <label for="medNoon">☀️ 中午服药</label>
+                </div>
+                
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="medEvening" onchange="saveMedication('evening')">
+                    <label for="medEvening">🌙 晚上服药</label>
+                </div>
+
+                <div class="record-list" id="medRecords"></div>
+            </div>
+
+            <!-- 运动记录 -->
+            <div class="card exercise">
+                <div class="card-title">
+                    <div class="icon">🏃</div>
+                    运动记录
+                </div>
+                
+                <div class="input-group">
+                    <select id="exerciseType">
+                        <option value="">选择运动类型</option>
+                        <option value="散步">🚶 散步</option>
+                        <option value="慢跑">🏃 慢跑</option>
+                        <option value="太极拳">🥋 太极拳</option>
+                        <option value="游泳">🏊 游泳</option>
+                        <option value="骑车">🚴 骑车</option>
+                        <option value="健身">💪 健身</option>
+                        <option value="其他">🎯 其他</option>
+                    </select>
+                    <input type="number" id="exerciseDuration" placeholder="时长(分钟)" min="1">
+                </div>
+                <button class="btn btn-primary" onclick="saveExercise()">记录运动</button>
+
+                <div class="record-list" id="exerciseRecords"></div>
+            </div>
+        </div>
+
+        <!-- 提醒页面 -->
+        <div id="reminderTab" class="tab-content">
+            <div class="card reminder-section">
+                <div class="card-title">
+                    <div class="icon">⏰</div>
+                    提醒设置
+                </div>
+                
+                <div class="time-section">
+                    <div class="time-label">🩺 血压测量提醒</div>
+                    <div class="input-group">
+                        <input type="time" id="bpReminderTime" value="08:00">
+                        <button class="btn btn-success" onclick="setReminder('bloodPressure')">设置提醒</button>
+                    </div>
+                </div>
+
+                <div class="time-section">
+                    <div class="time-label">💊 吃药提醒</div>
+                    <div class="input-group">
+                        <input type="time" id="medReminderTime" value="08:00">
+                        <button class="btn btn-success" onclick="setReminder('medication')">设置提醒</button>
+                    </div>
+                </div>
+
+                <div class="time-section">
+                    <div class="time-label">🏃 运动提醒</div>
+                    <div class="input-group">
+                        <input type="time" id="exerciseReminderTime" value="16:00">
+                        <button class="btn btn-success" onclick="setReminder('exercise')">设置提醒</button>
+                    </div>
+                </div>
+
+                <div id="activeReminders"></div>
+            </div>
+        </div>
+
+        <!-- 统计页面 -->
+        <div id="statsTab" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">📊</div>
+                    今日统计
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="bpCount">0</div>
+                        <div class="stat-label">血压记录次数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="medCount">0</div>
+                        <div class="stat-label">服药次数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="exerciseCount">0</div>
+                        <div class="stat-label">运动次数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="exerciseMinutes">0</div>
+                        <div class="stat-label">运动总时长(分)</div>
+                    </div>
+                </div>
+
+                <button class="btn export-btn" onclick="exportToExcel()">📥 导出Excel</button>
+                <button class="btn export-btn" onclick="showHistory()" style="margin-top: 10px; background: #9C27B0;">📋 查看历史记录</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('record')">
+            <div class="nav-icon">📝</div>
+            <div class="nav-label">记录</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('reminder')">
+            <div class="nav-icon">⏰</div>
+            <div class="nav-label">提醒</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('stats')">
+            <div class="nav-icon">📊</div>
+            <div class="nav-label">统计</div>
+        </div>
+    </div>
+
+    <!-- 安装提示模态框 -->
+    <div class="modal" id="installModal">
+        <div class="modal-content">
+            <div class="modal-title">📱 安装应用</div>
+            <p style="text-align: center; margin-bottom: 20px; color: #666;">
+                将健康记录助手安装到手机桌面，方便随时记录和接收提醒
+            </p>
+            <button class="btn install-btn" onclick="installApp()">安装到桌面</button>
+            <button class="btn" onclick="closeInstallModal()" style="margin-top: 10px; background: #f5f5f5; color: #333;">稍后再说</button>
+        </div>
+    </div>
+
+    <script>
+        // 注册Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker 注册成功:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker 注册失败:', error);
+                    });
+            });
+        }
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
